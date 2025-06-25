@@ -1,0 +1,29 @@
+release_*:
+  tag_push:
+    - name: gvisor-syscalls-tests
+      runner:
+        cpus: 32
+      docker:
+        build:
+          dockerfile: gvisor/Dockerfile
+          by:
+            - gvisor/compile-syscall-test.sh
+      stages:
+        - name: clone gvisor
+          script:
+            - echo "Cloning gvisor..."
+            - bash -c "cd gvisor && git clone https://cnb.cool/DragonOS-Community/gvisor -b dragonos/release-20250616.0 --depth 1"
+        - name: build gvisor syscalls tests
+          script:
+            - echo "Building gvisor syscalls tests..."
+            - bash -c "cd gvisor && bash compile-syscall-test.sh"
+            - echo "Build gvisor syscalls tests done."
+        - name: upload_gvisor_syscalls_tests_binary
+          type: git:release
+          options:
+            title: ${CNB_BRANCH}
+        - name: release attachments
+          image: cnbcool/attachments:latest
+          settings:
+            attachments:
+              - ./gvisor/results/*.tar.xz
